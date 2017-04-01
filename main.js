@@ -11,6 +11,7 @@ const url = require('url')
 // Wrangler
 var recursive = require('recursive-readdir');
 var XXHash = require('xxhash');
+var HashStream = require('xxhash').Stream
 var fs = require('fs-extra');
 const path = require('path')
 var getSize = require('get-folder-size');
@@ -22,7 +23,7 @@ function copy_directory(source, destination) {
     // Set already copied bytes to zero
     let bytesCopied = 0
     // Gett all files to copy
-    recursive(source, function(err, files) {
+    recursive(source, ['.*'], function(err, files) {
       // Function to copy files synchronous
       copyFile = function(x) {
         // If not all files have been copied:
@@ -34,9 +35,10 @@ function copy_directory(source, destination) {
             // Add size of data chunck to bytesCopied
             bytesCopied += buffer.length
             // Calculate percentage of already copied data
-            let percentage = ((bytesCopied / bytesTotal) * 100).toFixed(2)
+            let percentage = ((bytesCopied / bytesTotal) * 100).toFixed(4)
             // Log percentage
             console.log(files[x] + ": " + percentage + '%')
+            mainWindow.webContents.send('percentage', {"percentage": percentage, "state": "copy"});
           })
           // On end -> whole file read:
           readStream.on('end', function() {
@@ -86,6 +88,7 @@ function validate_files(files, source, destination) {
     }
     // Log stats
     console.log(valid_files / Object.keys(hashes["destination"]).length + " out of " + Object.keys(hashes["source"]).length + " files are okay.")
+    mainWindow.webContents.send( 'done' );
   })
 }
 
@@ -101,6 +104,7 @@ function get_hashs(files, source, destination, callback) {
   getHash = function(x) {
     // If we haven't calculated a hash for every file:
     if (x < files.length) {
+      mainWindow.webContents.send('percentage', {"percentage": (x/files.length*100).toFixed(4), "state": "verify"});
       // Read source file
       file = fs.readFileSync(files[x]);
       // Calculate source hash
@@ -116,6 +120,7 @@ function get_hashs(files, source, destination, callback) {
       }
       // Log current working hash
       console.log("current hash: " + source_hash + " - " + files[x].substring(files[x].lastIndexOf("/") + 1, files[x].length) )
+      console.log((x/files.length*100).toFixed(4))
       // continue to next file
       getHash(x + 1)
     // All hashes calculated
@@ -146,7 +151,7 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  mainWindow = new BrowserWindow({width: 900, height: 600, minHeight: 400, minWidth: 600, titleBarStyle: "hidden-inset", autoHideMenuBar: true, darkTheme: true})
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -196,8 +201,6 @@ ipcMain.on('copyFiles', (event, arg) => {
   copy_directory(arg[0], arg[1])
   // Send value synchronously back to renderer process
   event.returnValue = 4;
-  // Send async message to renderer process
-  mainWindow.webContents.send('ping', 5);
 });
 
 // In this file you can include the rest of your app's specific main process

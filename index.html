@@ -1,6 +1,27 @@
 <head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="node_modules/sweetalert2/dist/sweetalert2.min.css">
 <style>
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+	-webkit-user-select: none;
+	user-select: none;
+	cursor: default;
+}
+input, button, textarea, :focus {
+	outline: none;
+}
+
+#menuBar{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 35px;
+	width: 100%;
+	-webkit-app-region: drag;
+}
+
 body {
 	background-color: #172934;
 	-webkit-touch-callout: none;
@@ -168,10 +189,29 @@ text-align: center;
 	position:relative;
 	top:1px;
 }
+#progress_bar{
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	display: none;
+	
+}
+.progress_text{
+	color: #233C4B!important;
+	font-size: 5vw;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	text-align: center;
+	position:absolute;
+	top:50%;
+    left:50%;
+    transform:translateY(-50%) translateX(-50%);
+}
 </style>
 </head>
 <body>
-<div class="flex-container">
+<div class="flex-container" id="copy_ui">
  	<div class="flex-item">
  	<h1>Source</h1>
  	<table class="container" id="sources">
@@ -185,6 +225,8 @@ text-align: center;
  			
  		</table>
  	</div>
+ 	</div>	
+ 	<div id="progress_bar"></div>
  	<script>
  	  // You can also require other files to run in this process
  	  require('./renderer.js')

@@ -4,7 +4,8 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "install": "./node_modules/.bin/electron-rebuild"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -25,6 +26,8 @@
     "fs-extra": "latest",
     "recursive-readdir": "latest",
     "get-folder-size": "latest",
-    "drivelist": "latest"
+    "drivelist": "latest",
+    "sweetalert2": "latest",
+    "progressbar.js": "latest"
   }
 }
