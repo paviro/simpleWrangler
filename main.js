@@ -1,7 +1,7 @@
 const electron = require('electron')
-// Module to control application life.
+  // Module to control application life.
 const app = electron.app
-// Module to create native browser window.
+  // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 const ipcMain = electron.ipcMain
 
@@ -19,37 +19,40 @@ var getSize = require('get-folder-size');
 
 function copy_directory(source, destination) {
   // Get total size of files to copy
-  getSize(source, function(err, bytesTotal) {
+  getSize(source, function (err, bytesTotal) {
     // Set already copied bytes to zero
     let bytesCopied = 0
-    // Gett all files to copy
-    recursive(source, ['.*'], function(err, files) {
+      // Gett all files to copy
+    recursive(source, ['.*'], function (err, files) {
       // Function to copy files synchronous
-      copyFile = function(x) {
+      copyFile = function (x) {
         // If not all files have been copied:
         if (x < files.length) {
           // Open current file as data stream
           const readStream = fs.createReadStream(files[x])
-          // On data:
-          readStream.on('data', function(buffer) {
-            // Add size of data chunck to bytesCopied
-            bytesCopied += buffer.length
-            // Calculate percentage of already copied data
-            let percentage = ((bytesCopied / bytesTotal) * 100).toFixed(4)
-            // Log percentage
-            console.log(files[x] + ": " + percentage + '%')
-            mainWindow.webContents.send('percentage', {"percentage": percentage, "state": "copy"});
-          })
-          // On end -> whole file read:
-          readStream.on('end', function() {
-            // continue to next one
-            copyFile(x + 1);
-          })
-          // For every destination:
+            // On data:
+          readStream.on('data', function (buffer) {
+              // Add size of data chunck to bytesCopied
+              bytesCopied += buffer.length
+                // Calculate percentage of already copied data
+              let percentage = ((bytesCopied / bytesTotal) * 100).toFixed(4)
+                // Log percentage
+              console.log(files[x] + ": " + percentage + '%')
+              mainWindow.webContents.send('percentage', {
+                "percentage": percentage,
+                "state": "copy"
+              });
+            })
+            // On end -> whole file read:
+          readStream.on('end', function () {
+              // continue to next one
+              copyFile(x + 1);
+            })
+            // For every destination:
           for (var i = 0; i < destination.length; i++) {
             // Check if path exists and create if not
             ensureDirectoryExistence(destination[i] + files[x].slice(source.length))
-            // Write data stream to file
+              // Write data stream to file
             readStream.pipe(fs.createWriteStream(destination[i] + files[x].slice(source.length)));
           }
           // All files have been copied:
@@ -66,11 +69,11 @@ function copy_directory(source, destination) {
 
 function validate_files(files, source, destination) {
   // Get all hashes
-  get_hashs(files, source, destination, function(hashes) {
+  get_hashs(files, source, destination, function (hashes) {
     // Setup stats variables
     valid_files = 0
     broken_files = 0
-    // For source each file:
+      // For source each file:
     for (var file in hashes["source"]) {
       // For each copy of the source file:
       for (var destination in hashes["destination"]) {
@@ -78,17 +81,17 @@ function validate_files(files, source, destination) {
         // matching:
         if (hashes["source"][file] == hashes["destination"][destination][file]) {
           valid_files += 1
-          //console.log(file + " copied correctly...");
-        // Not matching:
+            //console.log(file + " copied correctly...");
+            // Not matching:
         } else {
           broken_files += 1
-          //console.log(file + " broken.");
+            //console.log(file + " broken.");
         }
       }
     }
     // Log stats
     console.log(valid_files / Object.keys(hashes["destination"]).length + " out of " + Object.keys(hashes["source"]).length + " files are okay.")
-    mainWindow.webContents.send( 'done' );
+    mainWindow.webContents.send('done');
   })
 }
 
@@ -101,35 +104,38 @@ function get_hashs(files, source, destination, callback) {
     hashes["destination"][destination[i]] = {}
   }
   // Get hash for every file:
-  getHash = function(x) {
-    // If we haven't calculated a hash for every file:
-    if (x < files.length) {
-      mainWindow.webContents.send('percentage', {"percentage": (x/files.length*100).toFixed(4), "state": "verify"});
-      // Read source file
-      file = fs.readFileSync(files[x]);
-      // Calculate source hash
-      source_hash = XXHash.hash(file, 0xCAFEBABE)
-      // Store source hash
-      hashes["source"][files[x].slice(source.length + 1)] = source_hash
-      // For each copy of the source:
-      for (var i = 0; i < destination.length; i++) {
-        // Read copy
-        file = fs.readFileSync(destination[i] + files[x].slice(source.length));
-        // Calculate and store copy hash
-        hashes["destination"][destination[i]][files[x].slice(source.length + 1)] = XXHash.hash(file, 0xCAFEBABE)
+  getHash = function (x) {
+      // If we haven't calculated a hash for every file:
+      if (x < files.length) {
+        mainWindow.webContents.send('percentage', {
+          "percentage": (x / files.length * 100).toFixed(4),
+          "state": "verify"
+        });
+        // Read source file
+        file = fs.readFileSync(files[x]);
+        // Calculate source hash
+        source_hash = XXHash.hash(file, 0xCAFEBABE)
+          // Store source hash
+        hashes["source"][files[x].slice(source.length + 1)] = source_hash
+          // For each copy of the source:
+        for (var i = 0; i < destination.length; i++) {
+          // Read copy
+          file = fs.readFileSync(destination[i] + files[x].slice(source.length));
+          // Calculate and store copy hash
+          hashes["destination"][destination[i]][files[x].slice(source.length + 1)] = XXHash.hash(file, 0xCAFEBABE)
+        }
+        // Log current working hash
+        console.log("current hash: " + source_hash + " - " + files[x].substring(files[x].lastIndexOf("/") + 1, files[x].length))
+        console.log((x / files.length * 100).toFixed(4))
+          // continue to next file
+        getHash(x + 1)
+          // All hashes calculated
+      } else {
+        // execute callback
+        callback(hashes)
       }
-      // Log current working hash
-      console.log("current hash: " + source_hash + " - " + files[x].substring(files[x].lastIndexOf("/") + 1, files[x].length) )
-      console.log((x/files.length*100).toFixed(4))
-      // continue to next file
-      getHash(x + 1)
-    // All hashes calculated
-    } else {
-      // execute callback
-      callback(hashes)
     }
-  }
-  // start getHash function
+    // start getHash function
   getHash(0)
 }
 
@@ -149,9 +155,17 @@ function ensureDirectoryExistence(filePath) {
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
-function createWindow () {
+function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 900, height: 600, minHeight: 400, minWidth: 600, titleBarStyle: "hidden-inset", autoHideMenuBar: true, darkTheme: true})
+  mainWindow = new BrowserWindow({
+    width: 900,
+    height: 600,
+    minHeight: 400,
+    minWidth: 600,
+    titleBarStyle: "hidden-inset",
+    autoHideMenuBar: true,
+    darkTheme: true
+  })
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -195,11 +209,11 @@ app.on('activate', function () {
 })
 
 // Listen for sync message from renderer process
-ipcMain.on('copyFiles', (event, arg) => {  
+ipcMain.on('copyFiles', (event, arg) => {
   // Print 3
   console.log(arg);
   copy_directory(arg[0], arg[1])
-  // Send value synchronously back to renderer process
+    // Send value synchronously back to renderer process
   event.returnValue = 4;
 });
 
