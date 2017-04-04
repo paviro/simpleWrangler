@@ -14,23 +14,39 @@ input, button, textarea, :focus {
 }
 
 #menuBar{
-	position: absolute;
-	top: 0px;
-	left: 0px;
-	height: 35px;
-	width: 100%;
-	-webkit-app-region: drag;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: #3b4654;
+  height: 38px;
+  width: 100%;
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  -webkit-app-region: drag;
+}
+
+.swal2-modal{
+  margin-top: -140px!important;
 }
 
 body {
-	background-color: #172934;
-	-webkit-touch-callout: none;
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+	font: 13px/20px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	color: #404040;
+	background: #596778;
+	overflow: hidden;
 }
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+input, button, textarea, :focus {
+  outline: none;
+}
+
 h1{
  	border:0px solid #333;
  	padding: 20px;
@@ -39,6 +55,7 @@ h1{
 	text-align: center;
 }
 .flex-container {
+padding-top: 10px;
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;

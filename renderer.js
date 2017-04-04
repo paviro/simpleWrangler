@@ -37,6 +37,7 @@ var fs = require('fs');
 if (process.platform == "darwin") {
 	var menuBar = document.createElement("div")
 	menuBar.id = "menuBar"
+	// menuBar.innerHTML = "Simple Wrangler"
 	document.body.appendChild(menuBar);
 };
 
